@@ -1,0 +1,22 @@
+# Figma Export Mapping
+
+This document describes how to map Figma components and their properties for export.
+
+## Figma Mapping Structure
+
+- `components`: List of components that are being exported.
+- `properties`: Definitions of the properties for each component.
+
+```json
+{
+  "components": [
+    {
+      "name": "ComponentName",
+      "properties": {
+        "property1": "value1",
+        "property2": "value2"
+      }
+    }
+  ]
+}
+```
