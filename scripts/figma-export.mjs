@@ -31,6 +31,15 @@ function writeJson(p, obj) {
   fs.writeFileSync(p, JSON.stringify(obj, null, 2) + "\n", "utf8");
 }
 
+function safeReadJson(p, fallback) {
+  try {
+    if (!fs.existsSync(p)) return fallback;
+    return readJson(p);
+  } catch {
+    return fallback;
+  }
+}
+
 function flattenNodes(documentNode) {
   const includeTypes = new Set(["FRAME", "COMPONENT", "COMPONENT_SET", "INSTANCE", "TEXT"]);
   const out = [];
@@ -49,7 +58,6 @@ function flattenNodes(documentNode) {
         type: node.type,
         pageName: pageName || "",
         frameName: frameName || "",
-        // minimal layout/style hints for diffing (best-effort)
         layout: {
           width: node.absoluteBoundingBox?.width ?? null,
           height: node.absoluteBoundingBox?.height ?? null
@@ -85,6 +93,26 @@ function flattenNodes(documentNode) {
   return out;
 }
 
+function updateSnapshotManifest({ manifestPath, newSnapshotPath }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const manifest = safeReadJson(manifestPath, { previous: "", latest: "", history: [] });
+
+  const prevLatest = manifest.latest || "";
+
+  manifest.previous = prevLatest;
+  manifest.latest = newSnapshotPath;
+
+  manifest.history = Array.isArray(manifest.history) ? manifest.history : [];
+  manifest.history.push({
+    date: today,
+    previous: prevLatest,
+    latest: newSnapshotPath
+  });
+
+  writeJson(manifestPath, manifest);
+  return { previous: manifest.previous, latest: manifest.latest };
+}
+
 async function main() {
   loadEnv();
 
@@ -117,7 +145,7 @@ async function main() {
   const outPath = `${outDir}/${stamp()}-nodes.json`;
   writeJson(outPath, snapshot);
 
-  // Update mapping snapshot pointers
+  // Update mapping snapshot pointers (kept for backwards compatibility)
   const mappingPath = config.mapping?.path ?? "figma-mapping.json";
   const mapping = readJson(mappingPath);
 
@@ -132,11 +160,17 @@ async function main() {
     exporter: "figma-api",
     notes: ""
   };
-
   writeJson(mappingPath, mapping);
+
+  // Update snapshot manifest (enterprise pin)
+  const manifestPath = config.export?.manifestPath ?? "figma/snapshots.json";
+  const pinned = updateSnapshotManifest({ manifestPath, newSnapshotPath: outPath });
 
   console.log(`✅ Exported snapshot: ${outPath}`);
   console.log(`✅ Updated mapping latestSnapshot: ${mappingPath}`);
+  console.log(`✅ Updated manifest: ${manifestPath}`);
+  console.log(`   previous=${pinned.previous || "(empty)"}`);
+  console.log(`   latest=${pinned.latest}`);
 }
 
 main().catch((e) => {

@@ -6,22 +6,38 @@ This repo helps you manage **incremental Figma → code updates** (no full regen
 - maintaining `figma-mapping.json` (nodeId → component/file) for traceability & safe updates
 - generating a `diff report` + `sync plan` you can feed into an AI to update code in your **real app repo**
 
-> This repo **does not modify your app UI code**. It produces artifacts (snapshot/diff/mapping/plan) you can use to update your main product repo.
+> This repo **does not modify your app UI code**. It produces artifacts (snapshot/diff/mapping/plan).
 
 ---
 
 ## Setup
 
-### 1) Install
+### Install
 ```bash
 yarn
 ```
 
-### 2) Create `.env`
+### Create `.env`
 ```bash
 cp .env.example .env
 # fill FIGMA_TOKEN and FIGMA_FILE_KEY
 ```
+
+---
+
+## Snapshot manifest (enterprise-style pinning)
+
+To avoid developers accidentally choosing the wrong `<old>` / `<new>` snapshots, this repo pins snapshot paths in:
+
+- `figma/snapshots.json`
+
+It stores:
+- `previous`: the snapshot used as the diff base
+- `latest`: the newest exported snapshot
+- `history`: append-only log of snapshot transitions
+
+`yarn figma:export` updates this manifest automatically.  
+`yarn figma:diff` uses this manifest by default.
 
 ---
 
@@ -33,24 +49,26 @@ yarn figma:export
 ```
 Outputs:
 - `figma/exports/<timestamp>-nodes.json`
-- updates `figma-mapping.json` (latestSnapshot/previousSnapshot)
+Updates:
+- `figma/snapshots.json` (previous/latest)
+- `figma-mapping.json` snapshot pointers (kept for backward compatibility)
 
-### Diff snapshots (to detect if Figma changed)
+### Diff snapshots (no arguments needed)
 ```bash
 yarn figma:diff
-# or specify:
-yarn figma:diff -- figma/exports/old.json figma/exports/new.json
 ```
 Outputs:
 - `figma/reports/<YYYY-MM-DD>-diff.json`
 
-### Sync mapping (safe scope: update mapping + generate a plan)
+> You can still override manually for debugging:
+> `yarn figma:diff -- figma/exports/old.json figma/exports/new.json`
+
+### Sync mapping using a diff report
 ```bash
 yarn figma:sync -- figma/reports/<YYYY-MM-DD>-diff.json
 ```
-Outputs:
-- updates `figma-mapping.json` (rename/move/deprecate/add placeholder entries)
-- writes `figma/reports/<YYYY-MM-DD>-sync-plan.json`
+Updates `figma-mapping.json` (rename/move/deprecate/add placeholders) and writes:
+- `figma/reports/<YYYY-MM-DD>-sync-plan.json`
 
 ### Validate mapping
 ```bash
@@ -60,8 +78,6 @@ yarn figma:mapping:validate -- figma-mapping.json
 ---
 
 # Prompt #1 — Init project (first-time Figma → Code conversion)
-
-Use this when you start a new project or implement the UI from Figma for the first time.
 
 ```text
 You are a Senior Frontend Engineer and Design Systems Lead. Convert a Figma design into production-ready code and set up a maintainable Figma→Code sync workflow.
@@ -128,43 +144,33 @@ FIRST, ASK ME (wait for answers)
 
 # Prompt #2 — Detect Figma changes + ask AI to sync updates (incremental)
 
-Use this workflow when you want to check if Figma changed, and if it did, update code based on the diff.
-
-## Step A — Generate snapshot + diff (local)
-1) Export a new snapshot:
+## Step A — Export + diff
 ```bash
 yarn figma:export
-```
-
-2) Generate a diff report:
-```bash
 yarn figma:diff
 ```
 
-3) (Optional but recommended) Generate a sync plan + update mapping:
-```bash
-yarn figma:sync -- figma/reports/<YYYY-MM-DD>-diff.json
-```
-
 ## Step B — Prompt the AI to update code in your app repo
-Copy/paste this prompt (and attach the report/mapping files if the AI cannot access your repo):
-
 ```text
 You are a Senior Frontend Engineer maintaining a Figma-to-code implementation.
 
 TASK: Sync our codebase with the latest Figma updates using incremental changes (DO NOT regenerate everything).
 
 CONTEXT
-- Figma reference (optional / for traceability only):
-  - Figma File URL: <paste URL>
-  - FIGMA_FILE_KEY: <paste key>
 - Mapping file: figma-mapping.json (nodeId -> component -> filePath)
 - Diff report: figma/reports/<YYYY-MM-DD>-diff.json
 - (Optional) Sync plan: figma/reports/<YYYY-MM-DD>-sync-plan.json
+- Snapshot manifest (preferred source of truth): figma/snapshots.json
 - Snapshots:
-  - Old snapshot: figma/exports/<old>-nodes.json
-  - New snapshot: figma/exports/<new>-nodes.json
+  - Old snapshot: (manifest.previous)
+  - New snapshot: (manifest.latest)
 - Token/theme files (if present): src/theme/tokens.css, tailwind.config.ts, src/theme/theme.ts
+
+CRITICAL CONSTRAINTS (DO NOT BREAK BUSINESS LOGIC)
+- Do NOT remove or change business logic (if/else, guards, permission checks, validation, feature flags, analytics, error handling).
+- Treat business logic as source of truth; only adjust presentation (markup/classes/styles) unless the diff explicitly indicates behavior changes.
+- If a UI change conflicts with existing logic, keep the logic and propose a UI-compatible solution.
+- If you think logic must change, STOP and ask for confirmation with a minimal patch proposal.
 
 WHAT YOU MUST DO
 1) Read the diff report and produce a Change Impact Report:
@@ -186,13 +192,6 @@ WHAT YOU MUST DO
    C) Proposed patch summary (what to change in each file)
    D) Risks & QA checklist (visual regression points)
 
-
-CRITICAL CONSTRAINTS (DO NOT BREAK BUSINESS LOGIC)
-- Do NOT remove or change business logic (if/else, guards, permission checks, validation, feature flags, analytics, error handling).
-- Treat business logic as source of truth; only adjust presentation (markup/classes/styles) unless the diff explicitly indicates behavior changes.
-- If a UI change conflicts with existing logic, keep the logic and propose a UI-compatible solution.
-- If you think logic must change, STOP and ask for confirmation with a minimal patch proposal.
-
 START NOW by reading figma/reports/<YYYY-MM-DD>-diff.json and figma-mapping.json.
 ```
 
@@ -202,5 +201,5 @@ START NOW by reading figma/reports/<YYYY-MM-DD>-diff.json and figma-mapping.json
 - Commit snapshots + diff reports into Git for auditing:
   - `figma/exports/…`
   - `figma/reports/…`
-- `figma-mapping.json` is the source of truth for linking nodeIds to code files.
+- `figma/snapshots.json` prevents mistakes when choosing which snapshots to diff.
 - If `diff.json.summary.modified/added/removed` are all `0` ⇒ nothing changed in Figma (skip sync).

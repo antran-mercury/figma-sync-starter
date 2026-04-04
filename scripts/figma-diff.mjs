@@ -8,11 +8,67 @@ function writeJson(p, obj) {
   fs.mkdirSync(path.dirname(p), { recursive: true });
   fs.writeFileSync(p, JSON.stringify(obj, null, 2) + "\n", "utf8");
 }
+
+function safeReadJson(p, fallback) {
+  try {
+    if (!fs.existsSync(p)) return fallback;
+    return readJson(p);
+  } catch {
+    return fallback;
+  }
+}
+
+function listSnapshots(outDir) {
+  if (!fs.existsSync(outDir)) return [];
+  return fs
+    .readdirSync(outDir)
+    .filter((f) => f.endsWith("-nodes.json"))
+    .map((f) => {
+      const full = path.join(outDir, f);
+      const stat = fs.statSync(full);
+      return { path: full, mtimeMs: stat.mtimeMs };
+    })
+    .sort((a, b) => b.mtimeMs - a.mtimeMs);
+}
+
+function resolveSnapshotPair({ config, mapping }) {
+  // 1) CLI args (debug mode)
+  const argOld = process.argv[2];
+  const argNew = process.argv[3];
+  if (argOld && argNew) return { oldPath: argOld, newPath: argNew, source: "args" };
+
+  // 2) Manifest
+  const manifestPath = config.export?.manifestPath ?? "figma/snapshots.json";
+  const manifest = safeReadJson(manifestPath, null);
+  if (manifest?.previous && manifest?.latest) {
+    return { oldPath: manifest.previous, newPath: manifest.latest, source: `manifest:${manifestPath}` };
+  }
+
+  // 3) Mapping fallback
+  const oldFromMapping = mapping.figma?.previousSnapshot?.path;
+  const newFromMapping = mapping.figma?.latestSnapshot?.path;
+  if (oldFromMapping && newFromMapping) {
+    return { oldPath: oldFromMapping, newPath: newFromMapping, source: "mapping" };
+  }
+
+  // 4) Directory fallback: pick 2 newest snapshots
+  const outDir = config.export?.outDir ?? "figma/exports";
+  const snaps = listSnapshots(outDir);
+  if (snaps.length >= 2) {
+    return { oldPath: snaps[1].path, newPath: snaps[0].path, source: `dir:${outDir}` };
+  }
+
+  throw new Error(
+    "Missing snapshot paths. Run yarn figma:export at least twice, or provide args: yarn figma:diff -- <old> <new>."
+  );
+}
+
 function indexById(snapshot) {
   const m = new Map();
   for (const n of snapshot.nodes) m.set(n.nodeId, n);
   return m;
 }
+
 function diffNode(a, b) {
   const changes = [];
   const pick = [
@@ -30,11 +86,15 @@ function diffNode(a, b) {
   for (const [p, from, to] of pick) {
     if (JSON.stringify(from) !== JSON.stringify(to)) changes.push({ path: p, from: from ?? null, to: to ?? null });
   }
+
+  // Keep fills as coarse "changed" to reduce noise
   if (JSON.stringify(a.style?.fills ?? null) !== JSON.stringify(b.style?.fills ?? null)) {
     changes.push({ path: "style.fills", from: "[changed]", to: "[changed]" });
   }
+
   return changes;
 }
+
 function categorize(fieldsChanged) {
   const s = new Set();
   for (const f of fieldsChanged) {
@@ -46,13 +106,14 @@ function categorize(fieldsChanged) {
 }
 
 async function main() {
+  const config = safeReadJson("figma/figma.config.json", {});
   const mapping = readJson("figma-mapping.json");
-  const oldPath = process.argv[2] || mapping.figma?.previousSnapshot?.path;
-  const newPath = process.argv[3] || mapping.figma?.latestSnapshot?.path;
 
-  if (!oldPath || !newPath) {
-    throw new Error("Missing snapshot paths. Provide args: yarn figma:diff -- <old> <new> OR set mapping previous/latest snapshot.");
-  }
+  const { oldPath, newPath, source } = resolveSnapshotPair({ config, mapping });
+
+  console.log(`ℹ️  Diff source: ${source}`);
+  console.log(`ℹ️  OLD snapshot: ${oldPath}`);
+  console.log(`ℹ️  NEW snapshot: ${newPath}`);
 
   const oldSnap = readJson(oldPath);
   const newSnap = readJson(newPath);
@@ -96,13 +157,17 @@ async function main() {
   const report = {
     diffVersion: "1.0.0",
     generatedAt: new Date().toISOString(),
-    figma: { fileKey: mapping.figma?.fileKey ?? "", oldSnapshotPath: oldPath, newSnapshotPath: newPath },
+    figma: {
+      fileKey: mapping.figma?.fileKey ?? "",
+      oldSnapshotPath: oldPath,
+      newSnapshotPath: newPath
+    },
     summary: { added: added.length, removed: removed.length, modified: modified.length, unchanged },
     changes: { added, removed, modified },
     tokenChanges: []
   };
 
-  const outDir = "figma/reports";
+  const outDir = config.diff?.outDir ?? "figma/reports";
   const outPath = `${outDir}/${new Date().toISOString().slice(0, 10)}-diff.json`;
   writeJson(outPath, report);
 
@@ -111,6 +176,6 @@ async function main() {
 }
 
 main().catch((e) => {
-  console.error("��� figma:diff failed:", e.message);
+  console.error("❌ figma:diff failed:", e.message);
   process.exit(1);
 });
