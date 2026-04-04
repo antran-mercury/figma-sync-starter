@@ -9,7 +9,23 @@ function writeJson(p, obj) {
 
 function ensureEntry(mapping, nodeLike) {
   const existing = mapping.entries.find((e) => e.nodeId === nodeLike.nodeId);
-  if (existing) return existing;
+  if (existing) {
+    if (!existing.node) {
+      existing.node = {
+        name: existing.nodeName || "",
+        type: existing.nodeType || "",
+        pageName: existing.pageName || "",
+        frameName: existing.frameName || "",
+        lastSeenInSnapshotDate: new Date().toISOString().slice(0, 10)
+      };
+    }
+    if (!existing.status) existing.status = "active";
+    if (!existing.code) existing.code = { componentName: existing.componentName || "", filePath: existing.filePath || "" };
+    if (!existing.api) existing.api = { props: [], events: [], slots: [], a11y: {} };
+    if (!existing.design) existing.design = { kind: "unknown", variants: [], states: [], tokensUsed: {}, layoutNotes: "" };
+    if (!existing.history) existing.history = [];
+    return existing;
+  }
 
   const entry = {
     nodeId: nodeLike.nodeId,

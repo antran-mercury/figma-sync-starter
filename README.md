@@ -6,7 +6,7 @@ This repo helps you manage **incremental Figma → code updates** (no full regen
 - maintaining `figma-mapping.json` (nodeId → component/file) for traceability & safe updates
 - generating a `diff report` + `sync plan` you can feed into an AI to update code in your **real app repo**
 
-> This repo **does not modify your app UI code**. It produces artifacts (snapshot/diff/mapping/plan).
+> This repo **does not modify your app UI code**. It produces artifacts (snapshot/diff/mapping/plan) you can use to update your main product repo.
 
 ---
 
@@ -41,7 +41,6 @@ yarn figma:diff
 # or specify:
 yarn figma:diff -- figma/exports/old.json figma/exports/new.json
 ```
-
 Outputs:
 - `figma/reports/<YYYY-MM-DD>-diff.json`
 
@@ -62,12 +61,18 @@ yarn figma:mapping:validate -- figma-mapping.json
 
 # Prompt #1 — Init project (first-time Figma → Code conversion)
 
-Copy/paste this prompt when starting a new project or implementing the UI from Figma for the first time.
+Use this when you start a new project or implement the UI from Figma for the first time.
 
 ```text
 You are a Senior Frontend Engineer and Design Systems Lead. Convert a Figma design into production-ready code and set up a maintainable Figma→Code sync workflow.
 
 THIS TASK IS FOR: Initial project setup / first-time Figma-to-code conversion.
+
+FIGMA ACCESS (IMPORTANT)
+- Figma File URL: <paste URL>
+- FIGMA_FILE_KEY: <paste key>
+- Frames in scope: <exact frame names OR node-ids>
+- If you (the assistant) cannot access Figma API directly, I (the user) will provide exported JSON/plugin dump that contains nodeId(s). In that case, you MUST work only from the provided export.
 
 GOALS
 - Implement the UI from the provided Figma frames using clean, reusable components (no full-page monolith).
@@ -75,7 +80,7 @@ GOALS
 - Establish snapshot exports in the repo for future incremental diffs.
 
 INPUTS I WILL PROVIDE
-- Figma file link + exact page/frame names to implement (or exported JSON/plugin dump with nodeId)
+- Figma file link + exact page/frame name(s) to implement (or exported JSON/plugin dump with nodeId)
 - Target stack (e.g. Next.js + React + TypeScript)
 - Styling (Tailwind / CSS Modules / etc.)
 - Component library (if any)
@@ -108,21 +113,24 @@ CONSTRAINTS
 FIRST, ASK ME (wait for answers)
 1) Stack + versions?
 2) Styling approach?
-3) Which frames (exact names) are in scope?
+3) Which frames (exact names OR node-ids) are in scope?
 4) Token strategy (Figma Variables? existing tokens?) + dark mode?
 5) Breakpoints?
 6) Required states?
 7) Data contracts or stubs?
 8) Repo conventions to follow?
+9) Confirm the input method:
+   A) I will provide exported JSON/plugin dump with nodeIds, OR
+   B) You should rely on the Figma URL + FIGMA_FILE_KEY (and I will ensure access).
 ```
 
 ---
 
 # Prompt #2 — Detect Figma changes + ask AI to sync updates (incremental)
 
-Use this prompt when you want to check if Figma changed, and if it did, ask AI to update your code based on the diff.
+Use this workflow when you want to check if Figma changed, and if it did, update code based on the diff.
 
-## Step A — Generate diff (local)
+## Step A — Generate snapshot + diff (local)
 1) Export a new snapshot:
 ```bash
 yarn figma:export
@@ -139,7 +147,7 @@ yarn figma:sync -- figma/reports/<YYYY-MM-DD>-diff.json
 ```
 
 ## Step B — Prompt the AI to update code in your app repo
-Copy/paste this prompt (and attach the report/mapping files if the AI cannot access the repo):
+Copy/paste this prompt (and attach the report/mapping files if the AI cannot access your repo):
 
 ```text
 You are a Senior Frontend Engineer maintaining a Figma-to-code implementation.
@@ -148,7 +156,7 @@ TASK: Sync our codebase with the latest Figma updates using incremental changes 
 
 CONTEXT
 - App Repo: <owner>/<repo>
-- Stack: Next.js + React + TypeScript + Tailwind
+- Stack: Next.js + React + TypeScript + Tailwind (adjust if different)
 - Mapping file: figma-mapping.json (nodeId -> component -> filePath)
 - Diff report: figma/reports/<YYYY-MM-DD>-diff.json
 - (Optional) Sync plan: figma/reports/<YYYY-MM-DD>-sync-plan.json
@@ -163,7 +171,7 @@ WHAT YOU MUST DO
    - Removed nodeIds
    - Modified nodeIds
    - Categorize each change as: token/style/layout/content/variant
-2) For each changed nodeId, look it up in figma-mapping.json and list EXACT files to update.
+2) For each changed nodeId, look it up in figma-mapping.json and list EXACT files to update (file paths).
 3) Apply minimal code edits only (preserve architecture and public APIs).
 4) If changes are token-only, update tokens/theme instead of editing many components.
 5) Update mapping to latest (REQUIRED, NO DATA LOSS):
@@ -182,7 +190,7 @@ START NOW by reading figma/reports/<YYYY-MM-DD>-diff.json and figma-mapping.json
 
 ---
 
-## Notes / Recommended practice
+## Recommended practice
 - Commit snapshots + diff reports into Git for auditing:
   - `figma/exports/…`
   - `figma/reports/…`
