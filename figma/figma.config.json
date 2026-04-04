@@ -1,0 +1,16 @@
+{
+  "framesInScope": [],
+  "export": {
+    "outDir": "figma/exports",
+    "includeNodeTypes": ["FRAME", "COMPONENT", "COMPONENT_SET", "INSTANCE", "TEXT"],
+    "minimalSnapshot": true
+  },
+  "diff": {
+    "outDir": "figma/reports"
+  },
+  "mapping": {
+    "path": "figma-mapping.json",
+    "docsPath": "docs/figma-mapping.md",
+    "deprecateInsteadOfDelete": true
+  }
+}

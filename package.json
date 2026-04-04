@@ -2,6 +2,7 @@
   "name": "figma-sync-starter",
   "private": true,
   "type": "module",
+  "packageManager": "yarn@1.22.22",
   "scripts": {
     "figma:export": "node scripts/figma-export.mjs",
     "figma:diff": "node scripts/figma-diff.mjs",

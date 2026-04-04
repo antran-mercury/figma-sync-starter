@@ -1,22 +1,45 @@
-# Figma Export Mapping
-
-This document describes how to map Figma components and their properties for export.
-
-## Figma Mapping Structure
-
-- `components`: List of components that are being exported.
-- `properties`: Definitions of the properties for each component.
-
-```json
 {
-  "components": [
-    {
-      "name": "ComponentName",
-      "properties": {
-        "property1": "value1",
-        "property2": "value2"
-      }
+  "schemaVersion": "1.0.0",
+  "project": {
+    "name": "figma-sync-starter",
+    "repository": "antran-mercury/figma-sync-starter",
+    "stack": {
+      "framework": "sync-only",
+      "language": "Node.js (ESM)",
+      "styling": "n/a",
+      "uiLibrary": "n/a"
     }
-  ]
+  },
+  "figma": {
+    "fileKey": "",
+    "fileUrl": "",
+    "pagesInScope": [],
+    "framesInScope": [],
+    "latestSnapshot": {
+      "date": "",
+      "path": "",
+      "exporter": "figma-api",
+      "notes": ""
+    },
+    "previousSnapshot": {
+      "date": "",
+      "path": ""
+    }
+  },
+  "conventions": {
+    "componentNaming": "PascalCase",
+    "fileNaming": "kebab-case",
+    "pathAliases": {},
+    "tokenStrategy": "n/a",
+    "defaultBranch": "master"
+  },
+  "tokens": {
+    "source": "figma-variables|manual",
+    "files": []
+  },
+  "entries": [],
+  "deprecatedPolicy": {
+    "neverDeleteEntries": true,
+    "deprecateInsteadOfDelete": true
+  }
 }
-```
