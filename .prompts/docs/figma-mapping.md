@@ -16,5 +16,8 @@ Minimum recommended fields per entry:
 - `status` (active|deprecated)
 - `node.name`, `node.type`, `node.pageName`, `node.frameName`
 - `code.componentName`, `code.filePath`
+- `code.selectors` (optional array of CSS selectors / HTML attribute anchors, e.g. `["[data-figma-node-id=\"123:456\"]"]`)
+  - Use this for template-based / monolith projects (PHP, AngularJS, WordPress) where there are no discrete component files.
+  - Add `data-figma-node-id="<nodeId>"` on the outer container element in your template and record the selector here.
 - `api.props` / variants as needed
 - `notes`

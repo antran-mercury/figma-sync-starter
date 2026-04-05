@@ -20,7 +20,8 @@ function ensureEntry(mapping, nodeLike) {
       };
     }
     if (!existing.status) existing.status = "active";
-    if (!existing.code) existing.code = { componentName: existing.componentName || "", filePath: existing.filePath || "" };
+    if (!existing.code) existing.code = { componentName: existing.componentName || "", filePath: existing.filePath || "", selectors: [] };
+    if (!Array.isArray(existing.code.selectors)) existing.code.selectors = [];
     if (!existing.api) existing.api = { props: [], events: [], slots: [], a11y: {} };
     if (!existing.design) existing.design = { kind: "unknown", variants: [], states: [], tokensUsed: {}, layoutNotes: "" };
     if (!existing.history) existing.history = [];
@@ -37,7 +38,7 @@ function ensureEntry(mapping, nodeLike) {
       frameName: nodeLike.frameName || "",
       lastSeenInSnapshotDate: new Date().toISOString().slice(0, 10)
     },
-    code: { componentName: "", filePath: "" },
+    code: { componentName: "", filePath: "", selectors: [] },
     api: { props: [], events: [], slots: [], a11y: {} },
     design: { kind: "unknown", variants: [], states: [], tokensUsed: {}, layoutNotes: "" },
     history: [],
