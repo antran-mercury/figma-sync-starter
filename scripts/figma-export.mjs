@@ -232,6 +232,8 @@ async function main() {
   const prevLatest = mapping.figma?.latestSnapshot ?? { date: "", path: "" };
   mapping.figma = mapping.figma || {};
   mapping.figma.fileKey = fileKey;
+  // Preserve the original URL from FIGMA_FILE_URL when available; fall back to any
+  // previously stored URL, then construct an approximate URL from the fileKey alone.
   mapping.figma.fileUrl =
     rawUrl || mapping.figma.fileUrl || `https://www.figma.com/file/${fileKey}`;
   mapping.figma.previousSnapshot = { date: prevLatest.date || "", path: prevLatest.path || "" };
