@@ -2,7 +2,9 @@
 
 ## 1) Export a snapshot
 - Copy `.env.example` → `.env`
-- Fill `FIGMA_TOKEN` and `FIGMA_FILE_KEY`
+- Fill `FIGMA_TOKEN` and `FIGMA_FILE_URL` (preferred) + `FIGMA_NODE_IDS`
+  - `FIGMA_FILE_KEY` is optional fallback if URL is unavailable
+  - `FIGMA_NODE_IDS` should be a comma-separated list of node-ids (e.g. `123:456,789:101`) to pin the export scope
 - Run:
   - `yarn figma:export`
 - Output:

@@ -6,7 +6,9 @@ PRIMARY GOALS
 - Enable incremental updates when Figma changes (diff + impact report), avoiding full regeneration.
 
 INPUTS I (THE USER) WILL PROVIDE
-- Figma file link + the exact page/frame names to implement (or a Figma JSON / plugin export)
+- Figma File URL (preferred) + Node IDs in scope (required — comma-separated, e.g. `123:456,789:101`); or a Figma JSON / plugin export containing the nodeId(s)
+  - FIGMA_FILE_KEY is optional fallback (only if URL is unavailable)
+  - If you (the assistant) cannot access Figma API directly, I will provide an exported JSON/plugin dump; you MUST work only from that export and MUST NOT guess or include additional nodes/pages
 - Target stack: (React / Next.js / Vue / etc.)
 - Styling approach: (Tailwind / CSS Modules / styled-components / vanilla CSS)
 - Component library (if any): (MUI / Chakra / Radix / shadcn / AntD / none)
