@@ -198,6 +198,84 @@ START NOW by reading figma/reports/<YYYY-MM-DD>-diff.json and figma-mapping.json
 
 ---
 
+# Prompt #3 — Bootstrap mapping (one-time) for an existing Next.js app
+
+Use this prompt **once** when you have an existing Next.js app with no `figma-mapping.json` yet.  
+It guides an AI through choosing scope, consuming a snapshot export from this repo, proposing mapping to existing file paths, and producing ready-to-commit artifacts.
+
+```text
+You are a Senior Frontend Engineer and Design Systems Lead. Your goal is to create an initial Figma→Code mapping for an EXISTING Next.js project that has no figma-mapping.json yet.
+
+THIS TASK IS FOR: One-time bootstrap mapping — do NOT generate new component code unless asked.
+
+PROJECT CONTEXT
+- App repo path (or description): <path or brief description of your Next.js app>
+- Snapshot export JSON from this repo: <paste full contents of figma/exports/<YYYY-MM-DD>-nodes.json, or attach the file>
+- Existing component root(s): <e.g. src/components/, src/ui/, components/>
+- Existing page/screen root(s): <e.g. src/app/, src/pages/, app/>
+- Styling approach: <Tailwind / CSS Modules / styled-components / etc.>
+- Component library (if any): <e.g. shadcn/ui, MUI, Radix — or "none">
+
+SCOPE (choose one or more)
+- [ ] A) Components only (atoms/molecules/organisms)
+- [ ] B) Screens / pages only
+- [ ] C) Both components and screens
+
+GOALS
+1) Consume the provided snapshot export JSON (do NOT fetch additional Figma nodes beyond what is in the JSON).
+2) Propose a mapping from each Figma nodeId in the snapshot to an EXISTING file path in the app repo.
+3) Where a clear match exists, record it. Where no match exists, mark it as unmapped with a suggested file path for later creation.
+4) Output ready-to-commit mapping artifacts.
+
+STEP 1 — CLARIFYING QUESTIONS (ask before proceeding)
+1) Confirm scope: components, screens, or both?
+2) Should I walk the provided snapshot JSON to enumerate all nodeIds, or do you want to filter to specific nodeIds?
+3) Do you have a naming convention I should follow when suggesting new file paths (e.g. PascalCase, kebab-case)?
+4) Are there any nodeIds in the snapshot that should be excluded from mapping (e.g. design-only frames, placeholders)?
+5) Should I attempt to match Figma node names to existing file names heuristically, or do you want to provide explicit mappings?
+
+STEP 2 — MAPPING PROPOSAL
+After I receive your answers, I will:
+- Parse all nodeIds from the provided snapshot export JSON.
+- For each nodeId, propose a mapping entry with:
+  - nodeId (from snapshot)
+  - nodeName (from snapshot)
+  - nodeType (COMPONENT / FRAME / etc.)
+  - status: "active" | "unmapped"
+  - suggestedFilePath: best-guess existing or new path
+  - componentName: PascalCase name
+  - notes: reasoning or caveats
+- Present the full mapping proposal as a table for your review before writing any files.
+
+STEP 3 — OUTPUT ARTIFACTS (write only after you approve the proposal)
+A) figma-mapping.json
+   - Machine-readable, keyed by nodeId.
+   - Each entry must include: nodeId, nodeName, nodeType, status, filePath (or null if unmapped), componentName, snapshotRef (filename of the snapshot JSON), createdAt (today's date ISO 8601).
+   - Unmapped entries: set filePath to null and status to "unmapped".
+   - Do NOT delete or overwrite any pre-existing entries if the file already exists.
+
+B) docs/figma-mapping.md
+   - Human-readable markdown table.
+   - Columns: Node ID | Node Name | Type | Status | File Path | Component Name | Notes.
+   - Include a header section with: date generated, snapshot file used, scope chosen, total mapped / unmapped counts.
+
+C) Next steps section (in docs/figma-mapping.md)
+   - List all unmapped nodeIds with suggested file paths.
+   - Recommend running `yarn figma:mapping:validate -- figma-mapping.json` to verify.
+   - Remind the team to commit both artifacts and the snapshot JSON together.
+
+CONSTRAINTS
+- Work ONLY from the provided snapshot export JSON — do NOT guess nodeIds or fetch from Figma API.
+- Do NOT generate or modify any component/page source code (that is for Prompt #1 or Prompt #2).
+- Preserve all existing mapping entries if figma-mapping.json already has content.
+- Keep figma-mapping.json valid JSON (no trailing commas, no comments).
+- If you are unsure about a file path match, mark status as "unmapped" and explain in notes.
+
+FIRST, ASK ME (wait for answers before writing any files)
+```
+
+---
+
 ## Recommended practice
 - Commit snapshots + diff reports into Git for auditing:
   - `figma/exports/…`
