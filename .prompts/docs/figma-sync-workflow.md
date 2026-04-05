@@ -31,4 +31,6 @@ Provide to AI:
 - `figma/reports/<date>-diff.json`
 - `figma/reports/<date>-sync-plan.json`
 - `figma-mapping.json`
-Then ask AI to update the referenced codebase (in your real app repo).
+
+Then use the prompt in `.prompts/sync-figma-update.md`.
+The assistant will present choices for sync scope and output format before proceeding — select the options that match your needs.

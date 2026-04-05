@@ -85,6 +85,40 @@ You are a Senior Frontend Engineer and Design Systems Lead. Convert a Figma desi
 
 THIS TASK IS FOR: Initial project setup / first-time Figma-to-code conversion.
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+INTERACTION MODE (REQUIRED)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Do NOT ask open-ended questions or start coding yet.
+Instead, work through the following steps one at a time:
+present the lettered options, wait for the user to choose, then move to the next step.
+
+STEP 1 — Figma input method
+How will you provide the Figma design?
+  A) Figma File URL + Node IDs (e.g. https://figma.com/file/XXX + nodeIds: 123:456,789:101)
+  B) FIGMA_FILE_KEY + Node IDs only (URL not available)
+  C) Pasted JSON / plugin export containing nodeId(s) — assistant works from this export only
+
+→ Reply with A, B, or C (and paste the URL/key/export as needed).
+
+STEP 2 — Implementation target (shown after Step 1 is answered)
+Where should the code land?
+  A) Brand-new repository (scaffold from scratch)
+  B) Existing repository (add components alongside existing code)
+
+→ Reply with A or B.
+
+STEP 3 — Stack selection (shown after Step 2 is answered)
+Which stack?
+  A) Next.js + React + TypeScript + Tailwind
+  B) React (Vite/CRA) + TypeScript + CSS Modules
+  C) Vue 3 + TypeScript + Tailwind
+  D) Other — specify (framework, styling, component library, token source)
+
+→ Reply with A, B, C, or D.
+
+After all three steps are answered, ask any remaining clarifying questions as a numbered list (breakpoints, states, data contracts, repo conventions), then wait before generating any code or artifacts.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 FIGMA ACCESS (IMPORTANT)
 - Figma File URL (preferred): <paste full Figma URL — file key will be parsed from it>
 - Node IDs in scope (required): <comma-separated node-ids, e.g. 123:456,789:101>
@@ -126,19 +160,6 @@ CONSTRAINTS
 - Avoid absolute positioning unless strictly required.
 - Prefer tokens over hard-coded values.
 - Preserve stable public APIs for reusable components.
-
-FIRST, ASK ME (wait for answers)
-1) Stack + versions?
-2) Styling approach?
-3) Which frames (exact names OR node-ids) are in scope?
-4) Token strategy (Figma Variables? existing tokens?) + dark mode?
-5) Breakpoints?
-6) Required states?
-7) Data contracts or stubs?
-8) Repo conventions to follow?
-9) Confirm the input method:
-   A) I will provide exported JSON/plugin dump with nodeIds (use ONLY those nodes — do NOT fetch additional nodes/pages), OR
-   B) You should rely on the Figma File URL + Node IDs in scope (do NOT browse beyond those nodes).
 ```
 
 ---
@@ -156,6 +177,30 @@ yarn figma:diff
 You are a Senior Frontend Engineer maintaining a Figma-to-code implementation.
 
 TASK: Sync our codebase with the latest Figma updates using incremental changes (DO NOT regenerate everything).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+INTERACTION MODE (REQUIRED)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Before reading any files or producing output, present the options below and wait for the user to choose.
+
+STEP 1 — Sync scope
+What nodes should this sync cover?
+  A) All changed nodes from the diff report (full diff)
+  B) A specific subset of nodeIds — I will list them now
+  C) Unsure — stop and show me the diff summary first, then I will decide
+
+→ Reply with A, B, or C (and paste the subset nodeIds if B).
+
+STEP 2 — Output format (shown after Step 1 is answered)
+What output do you need from this session?
+  A) Plan only — list files to touch + proposed changes, no code edits yet
+  B) Plan + code — produce the full patch (file edits) along with the plan
+  C) QA checklist only — I have the code; just give me the risk & regression checklist
+
+→ Reply with A, B, or C.
+
+After both steps are answered, proceed with the selected scope and format below.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 CONTEXT
 - Mapping file: figma-mapping.json (nodeId -> component -> filePath)
