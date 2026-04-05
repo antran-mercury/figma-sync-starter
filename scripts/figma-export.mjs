@@ -40,6 +40,23 @@ function safeReadJson(p, fallback) {
   }
 }
 
+/**
+ * Parse a Figma fileKey from a Figma URL or return the raw string if it is
+ * already a bare key (no slashes / dots).
+ *
+ * Supported URL formats:
+ *   https://www.figma.com/file/<fileKey>/...
+ *   https://www.figma.com/design/<fileKey>/...
+ */
+function parseFileKeyFromUrl(value) {
+  if (!value) return null;
+  const m = value.match(/figma\.com\/(?:file|design)\/([A-Za-z0-9_-]+)/);
+  if (m) return m[1];
+  // Treat as a raw key when the string contains only key-safe characters.
+  if (/^[A-Za-z0-9_-]+$/.test(value.trim())) return value.trim();
+  return null;
+}
+
 function flattenNodes(documentNode) {
   const includeTypes = new Set(["FRAME", "COMPONENT", "COMPONENT_SET", "INSTANCE", "TEXT"]);
   const out = [];
@@ -93,6 +110,33 @@ function flattenNodes(documentNode) {
   return out;
 }
 
+/**
+ * Flatten nodes returned by the Figma /nodes endpoint.
+ * Each entry in `nodesMap` has the shape: { document: <node>, ... }
+ */
+function flattenNodesMap(nodesMap) {
+  const out = [];
+  for (const entry of Object.values(nodesMap)) {
+    if (entry && entry.document) {
+      out.push(...flattenNodes(entry.document));
+    }
+  }
+  return out;
+}
+
+/**
+ * Resolve the Figma fileKey from environment variables.
+ * FIGMA_FILE_URL (preferred) is parsed for the key; FIGMA_FILE_KEY is the fallback.
+ * Returns null when neither variable yields a valid key.
+ */
+function resolveFileKey(rawUrl, rawKey) {
+  if (rawUrl) {
+    const key = parseFileKeyFromUrl(rawUrl);
+    if (key) return key;
+  }
+  return parseFileKeyFromUrl(rawKey ?? "");
+}
+
 function updateSnapshotManifest({ manifestPath, newSnapshotPath }) {
   const today = new Date().toISOString().slice(0, 10);
   const manifest = safeReadJson(manifestPath, { previous: "", latest: "", history: [] });
@@ -117,28 +161,64 @@ async function main() {
   loadEnv();
 
   const token = process.env.FIGMA_TOKEN;
-  const fileKey = process.env.FIGMA_FILE_KEY;
   if (!token) throw new Error("Missing FIGMA_TOKEN in .env");
-  if (!fileKey) throw new Error("Missing FIGMA_FILE_KEY in .env");
+
+  // Resolve fileKey: prefer FIGMA_FILE_URL, fall back to FIGMA_FILE_KEY.
+  const rawUrl = process.env.FIGMA_FILE_URL;
+  const rawKey = process.env.FIGMA_FILE_KEY;
+
+  const fileKey = resolveFileKey(rawUrl, rawKey);
+  if (!fileKey) {
+    throw new Error(
+      "Could not determine Figma file key. " +
+        "Set FIGMA_FILE_URL (e.g. https://www.figma.com/design/<key>/...) " +
+        "or FIGMA_FILE_KEY in .env"
+    );
+  }
 
   const configPath = "figma/figma.config.json";
   const config = fs.existsSync(configPath) ? readJson(configPath) : {};
 
-  const res = await fetch(`https://api.figma.com/v1/files/${fileKey}`, {
-    headers: { "X-Figma-Token": token }
-  });
-  if (!res.ok) throw new Error(`Figma API error ${res.status}: ${await res.text()}`);
+  // Resolve nodeIds: FIGMA_NODE_IDS env var (preferred) → config.framesInScope → entire file.
+  const envNodeIds = (process.env.FIGMA_NODE_IDS ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const configFrames = Array.isArray(config.framesInScope) ? config.framesInScope.filter(Boolean) : [];
+  const nodeIds = envNodeIds.length > 0 ? envNodeIds : configFrames;
 
-  const figmaFile = await res.json();
+  let nodes;
+
+  if (nodeIds.length > 0) {
+    // Fetch only the explicitly scoped nodes.
+    const idsParam = nodeIds.map((id) => encodeURIComponent(id)).join(",");
+    const url = `https://api.figma.com/v1/files/${fileKey}/nodes?ids=${idsParam}`;
+    const res = await fetch(url, { headers: { "X-Figma-Token": token } });
+    if (!res.ok) throw new Error(`Figma API error ${res.status}: ${await res.text()}`);
+    const figmaNodes = await res.json();
+    nodes = flattenNodesMap(figmaNodes.nodes ?? {});
+  } else {
+    // No scope defined — export the entire file (legacy behaviour).
+    console.warn(
+      "⚠️  No node IDs specified. Exporting the entire Figma file. " +
+        "Set FIGMA_NODE_IDS or figma.config.json#framesInScope to narrow the scope."
+    );
+    const url = `https://api.figma.com/v1/files/${fileKey}`;
+    const res = await fetch(url, { headers: { "X-Figma-Token": token } });
+    if (!res.ok) throw new Error(`Figma API error ${res.status}: ${await res.text()}`);
+    const figmaFile = await res.json();
+    nodes = flattenNodes(figmaFile.document);
+  }
 
   const snapshot = {
     snapshotVersion: "1.0.0",
     generatedAt: new Date().toISOString(),
     figma: {
       fileKey,
+      nodeIds: nodeIds.length > 0 ? nodeIds : null,
       framesInScope: config.framesInScope ?? []
     },
-    nodes: flattenNodes(figmaFile.document)
+    nodes
   };
 
   const outDir = config.export?.outDir ?? "figma/exports";
@@ -152,7 +232,8 @@ async function main() {
   const prevLatest = mapping.figma?.latestSnapshot ?? { date: "", path: "" };
   mapping.figma = mapping.figma || {};
   mapping.figma.fileKey = fileKey;
-  mapping.figma.fileUrl = mapping.figma.fileUrl || `https://www.figma.com/file/${fileKey}`;
+  mapping.figma.fileUrl =
+    rawUrl || mapping.figma.fileUrl || `https://www.figma.com/file/${fileKey}`;
   mapping.figma.previousSnapshot = { date: prevLatest.date || "", path: prevLatest.path || "" };
   mapping.figma.latestSnapshot = {
     date: new Date().toISOString().slice(0, 10),
