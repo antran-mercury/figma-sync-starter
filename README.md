@@ -20,7 +20,8 @@ yarn
 ### Create `.env`
 ```bash
 cp .env.example .env
-# fill FIGMA_TOKEN and FIGMA_FILE_KEY
+# fill FIGMA_TOKEN and FIGMA_FILE_URL + FIGMA_NODE_IDS
+# FIGMA_FILE_KEY is optional (fallback if URL is unavailable)
 ```
 
 ---
@@ -85,10 +86,10 @@ You are a Senior Frontend Engineer and Design Systems Lead. Convert a Figma desi
 THIS TASK IS FOR: Initial project setup / first-time Figma-to-code conversion.
 
 FIGMA ACCESS (IMPORTANT)
-- Figma File URL: <paste URL>
-- FIGMA_FILE_KEY: <paste key>
-- Frames in scope: <exact frame names OR node-ids>
-- If you (the assistant) cannot access Figma API directly, I (the user) will provide exported JSON/plugin dump that contains nodeId(s). In that case, you MUST work only from the provided export.
+- Figma File URL (preferred): <paste full Figma URL — file key will be parsed from it>
+- Node IDs in scope (required): <comma-separated node-ids, e.g. 123:456,789:101>
+- FIGMA_FILE_KEY (optional fallback): <paste key — only if URL is unavailable>
+- If you (the assistant) cannot access Figma API directly, I (the user) will provide an exported JSON/plugin dump containing the nodeId(s). In that case, you MUST work only from the provided export and MUST NOT guess or include additional nodes/pages.
 
 GOALS
 - Implement the UI from the provided Figma frames using clean, reusable components (no full-page monolith).
@@ -96,7 +97,7 @@ GOALS
 - Establish snapshot exports in the repo for future incremental diffs.
 
 INPUTS I WILL PROVIDE
-- Figma file link + exact page/frame name(s) to implement (or exported JSON/plugin dump with nodeId)
+- Figma File URL (preferred) + Node IDs in scope (e.g. 123:456,789:101), or exported JSON/plugin dump with nodeId(s)
 - Target stack (e.g. Next.js + React + TypeScript)
 - Styling (Tailwind / CSS Modules / etc.)
 - Component library (if any)
@@ -136,8 +137,8 @@ FIRST, ASK ME (wait for answers)
 7) Data contracts or stubs?
 8) Repo conventions to follow?
 9) Confirm the input method:
-   A) I will provide exported JSON/plugin dump with nodeIds, OR
-   B) You should rely on the Figma URL + FIGMA_FILE_KEY (and I will ensure access).
+   A) I will provide exported JSON/plugin dump with nodeIds (use ONLY those nodes — do NOT fetch additional nodes/pages), OR
+   B) You should rely on the Figma File URL + Node IDs in scope (do NOT browse beyond those nodes).
 ```
 
 ---
