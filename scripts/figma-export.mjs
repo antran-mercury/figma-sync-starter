@@ -124,6 +124,19 @@ function flattenNodesMap(nodesMap) {
   return out;
 }
 
+/**
+ * Resolve the Figma fileKey from environment variables.
+ * FIGMA_FILE_URL (preferred) is parsed for the key; FIGMA_FILE_KEY is the fallback.
+ * Returns null when neither variable yields a valid key.
+ */
+function resolveFileKey(rawUrl, rawKey) {
+  if (rawUrl) {
+    const key = parseFileKeyFromUrl(rawUrl);
+    if (key) return key;
+  }
+  return parseFileKeyFromUrl(rawKey ?? "");
+}
+
 function updateSnapshotManifest({ manifestPath, newSnapshotPath }) {
   const today = new Date().toISOString().slice(0, 10);
   const manifest = safeReadJson(manifestPath, { previous: "", latest: "", history: [] });
@@ -154,7 +167,7 @@ async function main() {
   const rawUrl = process.env.FIGMA_FILE_URL;
   const rawKey = process.env.FIGMA_FILE_KEY;
 
-  const fileKey = (rawUrl ? parseFileKeyFromUrl(rawUrl) : null) ?? parseFileKeyFromUrl(rawKey ?? "");
+  const fileKey = resolveFileKey(rawUrl, rawKey);
   if (!fileKey) {
     throw new Error(
       "Could not determine Figma file key. " +
@@ -178,8 +191,8 @@ async function main() {
 
   if (nodeIds.length > 0) {
     // Fetch only the explicitly scoped nodes.
-    const idsParam = nodeIds.join(",");
-    const url = `https://api.figma.com/v1/files/${fileKey}/nodes?ids=${encodeURIComponent(idsParam)}`;
+    const idsParam = nodeIds.map((id) => encodeURIComponent(id)).join(",");
+    const url = `https://api.figma.com/v1/files/${fileKey}/nodes?ids=${idsParam}`;
     const res = await fetch(url, { headers: { "X-Figma-Token": token } });
     if (!res.ok) throw new Error(`Figma API error ${res.status}: ${await res.text()}`);
     const figmaNodes = await res.json();
