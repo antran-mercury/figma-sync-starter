@@ -78,6 +78,58 @@ yarn figma:mapping:validate -- figma-mapping.json
 
 ---
 
+## AI prompt automation
+
+These commands assemble **fully pre-filled AI prompts** by reading your `.prompts/` files and injecting all project context (config, diff reports, behavior notes) automatically. Paste the output into any AI assistant and it can start working immediately — no manual clarifying-question cycle.
+
+### `yarn ai:init` — init prompt (first-time setup)
+
+```bash
+yarn ai:init
+```
+
+Reads:
+- `.prompts/figma-to-react-spec.md`
+- `figma-mapping.json` (stack, repo, conventions)
+- `.env` (`FIGMA_FILE_URL`, `FIGMA_NODE_IDS`)
+- `figma/figma.config.json` (framesInScope)
+- `.prompts/note_behavior/*.md` (latest section per node)
+
+Outputs:
+- `figma/prompts/<YYYY-MM-DD>-init-prompt.md`
+
+### `yarn ai:sync` — sync prompt (after a Figma update)
+
+```bash
+yarn ai:sync
+```
+
+Reads:
+- `.prompts/sync-figma-update.md`
+- `figma/reports/<latest>-diff.json`
+- `figma/reports/<latest>-sync-plan.json`
+- `figma-mapping.json`
+- `.prompts/note_behavior/*.md` (filtered to changed nodes)
+
+Outputs:
+- `figma/prompts/<YYYY-MM-DD>-sync-prompt.md`
+
+### `yarn figma:pipeline` — full automated pipeline
+
+Runs the entire workflow in one command:
+
+```bash
+yarn figma:pipeline
+```
+
+Equivalent to:
+1. `yarn figma:export` → export Figma snapshot
+2. `yarn figma:diff`   → diff old vs new snapshot
+3. `yarn figma:sync`   → update mapping (auto-detects latest diff)
+4. `yarn ai:sync`      → assemble pre-filled sync prompt
+
+---
+
 # Prompt #1 — Init project (first-time Figma → Code conversion)
 
 ```text
