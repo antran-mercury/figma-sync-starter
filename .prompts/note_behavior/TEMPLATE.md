@@ -1,6 +1,6 @@
 # Behavior: node-id
 
-> Figma Node: `<node-id>` | Component: `<ComponentName>` | File: `<path/to/Component.tsx>`
+> Figma Node: `<node-id>`
 
 ---
 
@@ -10,28 +10,28 @@
 **Author:** @designer-name  
 **Change type:** <!-- Choose one: initial | interaction-update | layout-change | state-change | animation-update -->
 
-### Trigger / Điều kiện kích hoạt
+### Trigger
 
-<!-- Mô tả khi nào behavior này xảy ra -->
+<!-- Describe when this behavior occurs -->
 
-### Behavior / Hành vi
+### Behavior
 
-<!-- Mô tả chi tiết behavior UI -->
+<!-- Describe the UI behavior in detail -->
 
 ### States
 
-<!-- Danh sách các state liên quan: default, hover, active, disabled, loading, error, empty -->
+<!-- List the relevant states: default, hover, active, disabled, loading, error, empty -->
 
 ### Animation / Transition
 
-<!-- Nếu có animation: duration, easing, loại animation. Bỏ qua nếu không cần -->
+<!-- If there is an animation: duration, easing, type. Skip if not applicable -->
 
-### Notes cho AI
+### Notes for AI
 
-<!-- Ghi chú kỹ thuật, edge cases, hoặc thông tin AI cần biết để implement đúng -->
+<!-- Technical notes, edge cases, or anything AI needs to know to implement correctly -->
 
 ---
 
 ## History
 
-<!-- Các phiên bản cũ sẽ được di chuyển xuống đây -->
+<!-- Previous versions will be moved here -->

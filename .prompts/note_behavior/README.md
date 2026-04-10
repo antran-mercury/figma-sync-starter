@@ -1,43 +1,43 @@
-# 📋 Note Behavior — Hướng dẫn cho Designer
+# 📋 Note Behavior — Designer Guide
 
-## Mục đích
+## Purpose
 
-Folder này chứa các ghi chú behavior/interaction từ team Design.
-Designer chỉ định Figma node ID và mô tả behavior UI mong muốn.
-AI sẽ đọc file này để hiểu và implement đúng behavior UI.
+This folder contains behavior/interaction notes from the Design team.
+Designers specify a Figma node ID and describe the desired UI behavior.
+AI reads these files to understand and implement the correct UI behavior.
 
-## Quy tắc
+## Rules
 
-1. **1 node-id = 1 file**, tên file là `<node-id>.md` (thay `:` bằng `-`)
-   - Ví dụ: node `148:4463` → file `148-4463.md`
-2. Khi **tạo mới**: copy template bên dưới, điền vào
-3. Khi **update**:
-   - Di chuyển block `Latest` cũ xuống `History`
-   - Viết block `Latest` mới lên trên
-   - AI sẽ luôn đọc block **Latest** để implement
-4. **Không xóa History** — giữ lại để AI hiểu context thay đổi
+1. **1 node-id = 1 file**, filename is `<node-id>.md` (replace `:` with `-`)
+   - Example: node `148:4463` → file `148-4463.md`
+2. **Creating a new file**: copy the template below and fill it in
+3. **Updating an existing file**:
+   - Move the current `Latest` block down into `History`
+   - Write the new `Latest` block at the top
+   - AI always reads the **Latest** block to implement
+4. **Never delete History** — keep it so AI understands the context of changes
 
 ## Template
 
-Xem file [TEMPLATE.md](./TEMPLATE.md) để copy khi tạo behavior mới.
+See [TEMPLATE.md](./TEMPLATE.md) to copy when creating a new behavior file.
 
 ## Change types
 
-| Type                 | Khi nào dùng                                      |
-| -------------------- | ------------------------------------------------- |
-| `initial`            | Lần đầu tạo behavior                              |
-| `interaction-update` | Thay đổi cách tương tác (click, hover, swipe...)   |
-| `layout-change`      | Thay đổi vị trí, kích thước tooltip/hotspot        |
-| `state-change`       | Thêm/bớt state (loading, error, disabled...)       |
-| `animation-update`   | Thay đổi animation, transition                     |
+| Type                 | When to use                                           |
+| -------------------- | ----------------------------------------------------- |
+| `initial`            | First time creating this behavior                     |
+| `interaction-update` | Changing how users interact (click, hover, swipe...)  |
+| `layout-change`      | Changing position or size of tooltip/hotspot          |
+| `state-change`       | Adding or removing states (loading, error, disabled…) |
+| `animation-update`   | Changing animation or transition                      |
 
-## Cấu trúc folder
+## Folder structure
 
 ```
 note_behavior/
-├── README.md          ← File này — hướng dẫn cho Designer
-├── TEMPLATE.md        ← Template để copy khi tạo behavior mới
-├── 148-4463.md        ← Ví dụ: behavior cho node 148:4463
-├── 200-1234.md        ← Ví dụ: behavior cho node khác
+├── README.md          ← This file — Designer guide
+├── TEMPLATE.md        ← Template to copy when creating a new behavior file
+├── 148-4463.md        ← Example: behavior for node 148:4463
+├── 200-1234.md        ← Example: behavior for another node
 └── ...
 ```
