@@ -122,6 +122,7 @@ function main() {
   const language = display(stack.language, "TypeScript");
   const styling = display(stack.styling, "⚠️  [TODO: set project.stack.styling — e.g. Tailwind, CSS Modules, styled-components]");
   const uiLibrary = display(stack.uiLibrary, "none");
+  const font = display(conventions.font, null);
 
   // --- Conventions ---
   const componentNaming = display(conventions.componentNaming, "PascalCase");
@@ -178,6 +179,9 @@ function main() {
   lines.push(`| Language | ${language} |`);
   lines.push(`| Styling | ${styling} |`);
   lines.push(`| Component library | ${uiLibrary} |`);
+  if (font) {
+    lines.push(`| Font | ${font} |`);
+  }
   lines.push("");
   lines.push("### 3. Conventions");
   lines.push("");
