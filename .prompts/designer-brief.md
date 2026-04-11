@@ -72,35 +72,66 @@
 ## Pages
 
 <!--
-  List every Figma frame that should become a React/Vue/etc. component.
+  List every page/screen that should become a React/Vue/etc. component.
 
-  For each frame, create a "### Page Name" subsection and fill in:
-  - Node ID:   the Figma node ID (e.g. 148:4463)
-               How to find it: open Figma → click the frame → look at Dev Mode
-               or copy the frame link — the node ID is after "node-id=" in the URL
-               (replace the dash with a colon: "148-4463" → "148:4463")
-  - Component: the PascalCase name for the React component (e.g. HomeDesktop)
-  - File:      the file path where the component will live
-               (e.g. src/pages/home/HomeDesktop.tsx)
-  - Breakpoint: (optional) the CSS breakpoint this frame targets
-               (e.g. ">= 1280px", "< 768px", "768px – 1279px")
-  - Notes:     (optional) short design notes for the developer / AI
-               (layout hints, special interactions, important details)
+  TWO-LEVEL FORMAT (recommended for responsive pages):
+  ─────────────────────────────────────────────────────
+  Use "### Page Name" for the component (shared across breakpoints), then
+  "#### Breakpoint Label" for each Figma frame variant:
+
+    ### Home Page
+    - Component: HomePage
+    - File: src/pages/home/HomePage.tsx
+    - Notes: (optional) design notes shared across all breakpoints
+
+    #### Desktop
+    - Node ID: 148:4463
+    - Breakpoint: >= 1280px
+
+    #### Tablet
+    - Node ID: 200:5678
+    - Breakpoint: 768px – 1279px
+
+    #### Mobile
+    - Node ID: 200:1234
+    - Breakpoint: < 768px
+
+  The script will group these into ONE figma-mapping.json entry with a
+  "responsiveVariants" array — all node IDs are tracked automatically.
+
+  SINGLE-FRAME FORMAT (for pages with no responsive variants):
+  ─────────────────────────────────────────────────────────────
+  Just put "- Node ID:" directly under the "###" heading:
+
+    ### About Page
+    - Node ID: 300:5678
+    - Component: AboutPage
+    - File: src/pages/about/AboutPage.tsx
+    - Notes: (optional)
+
+  ─────────────────────────────────────────────────────────────
+  How to find a Node ID:
+    Open Figma → click the frame → look at Dev Mode, or copy the frame link —
+    the node ID is after "node-id=" in the URL (replace dash with colon:
+    "148-4463" → "148:4463")
 -->
 
-### Home Page - Desktop
-- Node ID: 148:4463
-- Component: HomeDesktop
-- File: src/pages/home/HomeDesktop.tsx
-- Breakpoint: >= 1280px
-- Notes: Hero section with interactive hotspot markers.
+### Home Page
+- Component: HomePage
+- File: src/pages/home/HomePage.tsx
+- Notes: Hero section with interactive hotspot markers. Mobile uses scrollable cards.
 
-### Home Page - Mobile
+#### Desktop
+- Node ID: 148:4463
+- Breakpoint: >= 1280px
+
+#### Tablet
+- Node ID: 200:5678
+- Breakpoint: 768px – 1279px
+
+#### Mobile
 - Node ID: 200:1234
-- Component: HomeMobile
-- File: src/pages/home/HomeMobile.tsx
 - Breakpoint: < 768px
-- Notes: Single column layout. Hotspots replaced with scrollable cards.
 
 ## Behavior: 148:4463
 
