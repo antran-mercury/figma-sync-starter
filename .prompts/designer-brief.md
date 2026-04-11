@@ -30,18 +30,14 @@
 <!--
   Fill in your project details below.
   - Name: the display name of your project
-  - Framework: what JS framework is used (e.g. Next.js, React, Vue, Nuxt)
-  - Language: TypeScript or JavaScript
-  - Styling: how the app is styled (e.g. Tailwind CSS, CSS Modules, styled-components)
-  - UI Library: any component library used (e.g. shadcn/ui, MUI, Ant Design) — write "none" if not applicable
   - Font: the fonts used in the design (body font first, then heading font)
+
+  NOTE: Technical stack decisions (framework, language, styling approach,
+  component library) are the developer's responsibility and are defined in
+  `.prompts/figma-to-react-spec.md`. You do not need to fill these in here.
 -->
 
 - Name: My Project Name
-- Framework: Next.js
-- Language: TypeScript
-- Styling: Tailwind CSS
-- UI Library: none
 - Font: Inter (body), Playfair Display (heading)
 
 ## Figma
