@@ -19,6 +19,62 @@ INPUTS I (THE USER) WILL PROVIDE
 - Data contracts (API shapes) or confirm stubs/mocks are OK
 - Existing repo conventions (folder structure, lint rules, naming) if applicable
 
+---
+
+## ⚑ ICON POLICY (MANDATORY — NO EXCEPTIONS)
+
+### ICON FONT CONFIG
+<!-- Fill in the icon font your project uses. Remove options that do not apply. -->
+- Icon font in use: <!-- e.g. Material Symbols, Font Awesome 6, Phosphor, Lucide, etc. -->
+- Import method: <!-- e.g. <link> tag, npm package, CSS class, React component -->
+- Base CSS class (if any): <!-- e.g. "material-symbols-outlined", "fa-solid", "ph" -->
+- Example usage: <!-- e.g. <span class="material-symbols-outlined">search</span> -->
+
+### ICON MAPPING TABLE
+<!-- Map every Figma icon layer/component name to its icon-font equivalent.
+     Add a row for each icon used in the Figma design. -->
+
+| Figma node / layer name | Icon font class / glyph            | Notes                   |
+|-------------------------|------------------------------------|-------------------------|
+| ic/close                | material-symbols-outlined: close   | <!-- example row -->    |
+| ic/search               | material-symbols-outlined: search  | <!-- example row -->    |
+| <!-- add rows -->       |                                    |                         |
+
+### ICON RULES (ENFORCED)
+1. **NEVER export or embed SVG icons from Figma**, even if the Figma node is a vector/SVG.
+   - Rationale: SVG output is fragile, bloated, and bypasses the icon font system.
+   - Exception: only use an SVG when the user explicitly writes "use SVG for this icon" in the designer brief.
+2. When you encounter a vector/SVG icon node in Figma, look it up in the ICON MAPPING TABLE above and render via icon font class instead.
+3. If an icon is NOT in the mapping table:
+   a. STOP — do not guess or use SVG.
+   b. Add the icon name to your "🚨 Blockers" section.
+   c. Ask the user to provide the correct icon-font class before proceeding with that icon.
+4. Icon font classes must come from the declared icon font only. Do not mix icon libraries.
+5. Render icons with the correct semantic element (e.g., `<span aria-hidden="true">` for decorative icons; `<button aria-label="Close">` for interactive ones).
+
+---
+
+## ⚑ FIGMA FIDELITY POLICY (MANDATORY — NO CREATIVE CHANGES)
+
+### FIDELITY RULES (ENFORCED)
+1. **Do NOT make creative layout decisions.** Every layout value (padding, gap, margin, width, height,
+   border-radius, font-size, line-height, letter-spacing, color) MUST come from the Figma design or
+   the token files.
+2. If a measurement is missing from the Figma design AND no token exists for it:
+   a. Do NOT guess or use a "reasonable default".
+   b. Add the missing measurement to your "🚨 Blockers" section.
+   c. Ask the user to confirm the value before writing the CSS/Tailwind class.
+3. Typography must match Figma exactly: font-family, font-weight, font-size, line-height,
+   letter-spacing, text-transform.
+4. Spacing (padding/gap/margin) must match Figma Auto Layout values exactly.
+   Prefer token/variable references over raw pixel values.
+5. Border-radius must match Figma corner-radius values exactly.
+6. Colors must reference design tokens. If a token is missing for a color, flag it as
+   "🚨 Missing token" and ask before hardcoding.
+7. Do NOT add, remove, or restructure sections beyond what the Figma design shows.
+
+---
+
 OUTPUTS / DELIVERABLES (MUST PRODUCE ALL)
 1) Clarifying questions FIRST (mandatory)
 - Ask the minimal set of questions needed to implement correctly.
@@ -72,6 +128,7 @@ Mapping rules:
 - Follow best practices: small components, clear props, composition over inheritance.
 - Styling must follow the chosen approach and prefer tokens over hardcoded values.
 - Avoid absolute positioning unless strictly required by the design.
+- Apply ICON POLICY and FIGMA FIDELITY POLICY above to all generated code.
 
 7) Accessibility & Responsiveness (REQUIRED)
 - Use semantic HTML (button, nav, header, main, form, label, etc.).
@@ -82,13 +139,41 @@ Mapping rules:
 8) Usage examples / stories (REQUIRED)
 - Provide either:
   - Storybook stories for key components, OR
-  - A “UsageExamples.tsx” showing how to compose screens.
+  - A "UsageExamples.tsx" showing how to compose screens.
 - Include examples that cover variants and states.
 
 9) Quality checklist (REQUIRED)
-- A11y checklist (labels, focus order, contrast assumptions)
-- Performance checklist (memoization where useful, image optimization, bundle concerns)
-- Consistency checklist (tokens usage, spacing, naming, variants coverage)
+
+### 🔍 Icon audit
+For every icon component generated:
+- [ ] Icon name in Figma
+- [ ] Mapped icon-font class (from ICON MAPPING TABLE) — or flagged as "🚨 Missing"
+- [ ] Confirm: no SVG export used
+
+### 📐 Figma fidelity checklist
+For every section/component generated:
+- [ ] Layout (padding/gap/margin) matches Figma Auto Layout values
+- [ ] Typography (family/weight/size/line-height/letter-spacing) matches Figma text styles
+- [ ] Spacing tokens used (not raw px) wherever a token exists
+- [ ] Border-radius matches Figma corner-radius
+- [ ] Colors reference design tokens (flag any hardcoded hex/rgb)
+- [ ] No sections added, removed, or reordered beyond Figma scope
+
+### A11y checklist
+- [ ] Labels and focus order correct
+- [ ] Contrast assumptions documented
+- [ ] Keyboard navigation works
+
+### Performance checklist
+- [ ] Memoization applied where useful
+- [ ] Image optimization considered
+- [ ] Bundle concerns noted
+
+### 🚫 Non-goals / Do not change
+Explicitly list what is OUT OF SCOPE (e.g., pages not in the design, existing unrelated components).
+
+### 🚨 Blockers (questions for the user)
+List any missing measurements, icon mappings, or tokens here and WAIT for answers before coding.
 
 ------------------------------------------------------------
 FIGMA UPDATE / SYNC WORKFLOW (CRITICAL REQUIREMENT)
@@ -105,7 +190,7 @@ B) Diff + Change Impact Report (required)
 When a new Figma version arrives:
 1) Re-export the latest node list (with nodeId).
 2) Diff the new export against the previous committed export.
-3) Produce a “Change Impact Report” listing:
+3) Produce a "Change Impact Report" listing:
    - Added nodes (new components or component extensions)
    - Removed nodes (dead code candidates)
    - Modified nodes (exact components/files to update)
@@ -131,9 +216,10 @@ D) Verification (recommended)
 ------------------------------------------------------------
 CONSTRAINTS
 - Do not flatten the UI into a single component; prioritize reusability.
-- Do not hardcode “magic numbers” if tokens exist; introduce tokens if needed.
+- Do not hardcode "magic numbers" if tokens exist; introduce tokens if needed.
 - Use consistent naming conventions (PascalCase components, stable folder structure).
 - Ask questions if anything is ambiguous rather than guessing.
+- Apply ICON POLICY and FIGMA FIDELITY POLICY above at all times.
 
 FIRST: ASK ME THESE CLARIFYING QUESTIONS (and wait)
 1) What stack should we use (React/Next/Vue) and which version?
@@ -144,3 +230,5 @@ FIRST: ASK ME THESE CLARIFYING QUESTIONS (and wait)
 6) Required states (hover/active/focus/disabled/loading/empty/error)?
 7) Data is real API or should we stub/mocks?
 8) Any repo conventions (eslint/prettier, path aliases, folder structure) to follow?
+9) Which icon font is in use? (Fill in the ICON FONT CONFIG section above before proceeding.)
+10) Are there any icons in the design that require SVG? (Default answer: no — icon font only.)
