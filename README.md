@@ -10,6 +10,47 @@ This repo helps you manage **incremental Figma → code updates** (no full regen
 
 ---
 
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18+)
+- Yarn
+- A Figma Personal Access Token ([how to create one](https://www.figma.com/developers/api#access-tokens))
+
+### Step-by-step setup
+
+1. **Install dependencies**
+   ```bash
+   yarn
+   ```
+
+2. **Configure `.env`** — copy `.env.example` to `.env` and fill in your Figma token:
+   ```env
+   FIGMA_TOKEN=figd_your_personal_access_token_here
+   ```
+
+3. **Fill in the designer brief** — open `.prompts/designer-brief.md` and fill in your project details (project name, framework, Figma URL, node IDs, pages, colors, behaviors).
+
+4. **Parse the designer brief** — this updates `figma-mapping.json`, `.env`, and behavior notes automatically:
+   ```bash
+   yarn designer:brief
+   ```
+
+5. **Export Figma snapshot** — this calls the Figma API and saves node data to `figma/exports/`. **This step is required before generating the AI prompt.**
+   ```bash
+   yarn figma:export
+   ```
+
+6. **Generate the AI init prompt**:
+   ```bash
+   yarn ai:init
+   ```
+
+7. **Paste the prompt into your AI assistant** — open `figma/prompts/<YYYY-MM-DD>-init-prompt.md` and copy its full contents into your AI assistant (e.g., Claude, ChatGPT, GitHub Copilot). The AI will use the pre-filled context to implement your UI.
+
+---
+
 ## Setup
 
 ### Install
