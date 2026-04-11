@@ -11,6 +11,12 @@
     "ai:init": "node scripts/ai-prompt-init.mjs",
     "ai:sync": "node scripts/ai-prompt-sync.mjs",
     "figma:pipeline": "yarn figma:export && yarn figma:diff && node scripts/figma-pipeline.mjs",
-    "designer:brief": "node scripts/designer-brief.mjs"
+    "designer:brief": "node scripts/designer-brief.mjs",
+    "test:ui": "playwright test",
+    "test:ui:update": "playwright test --update-snapshots",
+    "ui:report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0"
   }
 }
