@@ -152,7 +152,15 @@ function parseKeyValueSection(sectionText) {
 
 /**
  * Parse ### subsections inside ## Pages.
- * Each ### heading is a page name; the body is key-value pairs.
+ *
+ * Supports two formats:
+ *
+ * 1. MULTI-VARIANT (new): ### has #### sub-headings for each breakpoint variant.
+ *    Component name/file/notes live on the ### level; Node ID/Breakpoint on ####.
+ *    Result: { name, fields: {Component, File, Notes}, variants: [{label, fields}] }
+ *
+ * 2. SINGLE-FRAME (legacy, backward compatible): ### has Node ID directly.
+ *    Result: { name, fields: {NodeID, Component, File, Breakpoint, Notes}, variants: [] }
  */
 function parsePagesSection(sectionText) {
   // Drop the ## Pages heading line itself
@@ -164,8 +172,32 @@ function parsePagesSection(sectionText) {
     const nameMatch = sub.match(/^###\s+(.+)/);
     if (!nameMatch) continue;
     const name = nameMatch[1].trim();
-    const fields = parseKeyValueSection(sub);
-    pages.push({ name, fields });
+
+    // Check if there are #### variant sub-headings inside this ### block
+    const hasVariants = /^####\s/m.test(sub);
+
+    if (hasVariants) {
+      // Split on #### headings — everything before the first #### is the component-level block
+      const variantParts = sub.split(/^(?=####\s)/m);
+      const componentLevelBlock = variantParts[0]; // ### heading + component-level fields
+      const fields = parseKeyValueSection(componentLevelBlock);
+
+      const variants = [];
+      for (let i = 1; i < variantParts.length; i++) {
+        const variantBlock = variantParts[i];
+        const labelMatch = variantBlock.match(/^####\s+(.+)/);
+        if (!labelMatch) continue;
+        const label = labelMatch[1].trim();
+        const variantFields = parseKeyValueSection(variantBlock);
+        variants.push({ label, fields: variantFields });
+      }
+
+      pages.push({ name, fields, variants });
+    } else {
+      // Legacy single-frame format: Node ID lives directly on the ### level
+      const fields = parseKeyValueSection(sub);
+      pages.push({ name, fields, variants: [] });
+    }
   }
   return pages;
 }
@@ -267,34 +299,77 @@ function updateFigmaMapping(brief, mappingPath) {
   const collectedNodeIds = [];
 
   for (const page of brief.pages) {
-    const { name, fields } = page;
-    const nodeId = fields["Node ID"];
-    if (!nodeId) continue;
+    const { name, fields, variants } = page;
 
-    collectedNodeIds.push(nodeId);
+    if (variants && variants.length > 0) {
+      // ── Multi-variant (new grouped format) ────────────────────────────
+      // Primary nodeId is the first variant's node ID (typically Desktop)
+      const firstVariant = variants[0];
+      const primaryNodeId = firstVariant.fields["Node ID"];
+      if (!primaryNodeId) continue;
 
-    // Find existing entry by nodeId or create new one
-    let entry = mapping.entries.find((e) => e.nodeId === nodeId);
-    if (!entry) {
-      entry = { nodeId };
-      mapping.entries.push(entry);
-    }
+      // Collect ALL variant node IDs
+      for (const v of variants) {
+        const vid = v.fields["Node ID"];
+        if (vid) collectedNodeIds.push(vid);
+      }
 
-    entry.nodeName = name;
-    entry.nodeType = entry.nodeType ?? "FRAME";
-    entry.status = entry.status ?? "active";
+      // Find or create the entry keyed by the primary nodeId
+      let entry = mapping.entries.find((e) => e.nodeId === primaryNodeId);
+      if (!entry) {
+        entry = { nodeId: primaryNodeId };
+        mapping.entries.push(entry);
+      }
 
-    if (!entry.code) entry.code = {};
-    if (fields["Component"]) entry.code.componentName = fields["Component"];
-    if (fields["File"]) entry.code.filePath = fields["File"];
+      entry.nodeName = name;
+      entry.nodeType = entry.nodeType ?? "FRAME";
+      entry.status = entry.status ?? "active";
 
-    // Designer notes
-    const hasBreakpoint = Boolean(fields["Breakpoint"]);
-    const hasNotes = Boolean(fields["Notes"]);
-    if (hasBreakpoint || hasNotes) {
-      if (!entry.designerNotes) entry.designerNotes = {};
-      if (hasBreakpoint) entry.designerNotes.breakpoint = fields["Breakpoint"];
-      if (hasNotes) entry.designerNotes.notes = fields["Notes"];
+      if (!entry.code) entry.code = {};
+      if (fields["Component"]) entry.code.componentName = fields["Component"];
+      if (fields["File"]) entry.code.filePath = fields["File"];
+
+      if (fields["Notes"]) {
+        if (!entry.designerNotes) entry.designerNotes = {};
+        entry.designerNotes.notes = fields["Notes"];
+      }
+
+      // Build responsiveVariants array
+      entry.responsiveVariants = variants
+        .filter((v) => v.fields["Node ID"])
+        .map((v) => ({
+          nodeId: v.fields["Node ID"],
+          breakpoint: v.fields["Breakpoint"] ?? "",
+          label: v.label,
+        }));
+    } else {
+      // ── Single-frame (legacy backward-compatible format) ───────────────
+      const nodeId = fields["Node ID"];
+      if (!nodeId) continue;
+
+      collectedNodeIds.push(nodeId);
+
+      let entry = mapping.entries.find((e) => e.nodeId === nodeId);
+      if (!entry) {
+        entry = { nodeId };
+        mapping.entries.push(entry);
+      }
+
+      entry.nodeName = name;
+      entry.nodeType = entry.nodeType ?? "FRAME";
+      entry.status = entry.status ?? "active";
+
+      if (!entry.code) entry.code = {};
+      if (fields["Component"]) entry.code.componentName = fields["Component"];
+      if (fields["File"]) entry.code.filePath = fields["File"];
+
+      const hasBreakpoint = Boolean(fields["Breakpoint"]);
+      const hasNotes = Boolean(fields["Notes"]);
+      if (hasBreakpoint || hasNotes) {
+        if (!entry.designerNotes) entry.designerNotes = {};
+        if (hasBreakpoint) entry.designerNotes.breakpoint = fields["Breakpoint"];
+        if (hasNotes) entry.designerNotes.notes = fields["Notes"];
+      }
     }
   }
 
@@ -528,7 +603,7 @@ function main() {
     console.log(`    figma.fileUrl          → ${fileUrl}`);
   }
   if (collectedNodeIds.length > 0) {
-    console.log(`    entries added/updated  → ${collectedNodeIds.length} page(s): ${collectedNodeIds.join(", ")}`);
+    console.log(`    entries added/updated  → ${brief.pages.length} page(s), ${collectedNodeIds.length} node ID(s): ${collectedNodeIds.join(", ")}`);
   }
 
   if (behaviorResults.length > 0) {
