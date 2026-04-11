@@ -10,6 +10,7 @@
     "figma:sync": "node scripts/figma-sync.mjs",
     "ai:init": "node scripts/ai-prompt-init.mjs",
     "ai:sync": "node scripts/ai-prompt-sync.mjs",
-    "figma:pipeline": "yarn figma:export && yarn figma:diff && node scripts/figma-pipeline.mjs"
+    "figma:pipeline": "yarn figma:export && yarn figma:diff && node scripts/figma-pipeline.mjs",
+    "designer:brief": "node scripts/designer-brief.mjs"
   }
 }
