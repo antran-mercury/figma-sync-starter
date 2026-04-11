@@ -17,13 +17,6 @@ This repo helps you manage **incremental Figma → code updates** (no full regen
 yarn
 ```
 
-### Create `.env`
-```bash
-cp .env.example .env
-# fill FIGMA_TOKEN and FIGMA_FILE_URL + FIGMA_NODE_IDS
-# FIGMA_FILE_KEY is optional (fallback if URL is unavailable)
-```
-
 ---
 
 ## Snapshot manifest (enterprise-style pinning)
