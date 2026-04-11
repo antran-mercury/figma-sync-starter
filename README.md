@@ -17,13 +17,6 @@ This repo helps you manage **incremental Figma → code updates** (no full regen
 yarn
 ```
 
-### Create `.env`
-```bash
-cp .env.example .env
-# fill FIGMA_TOKEN and FIGMA_FILE_URL + FIGMA_NODE_IDS
-# FIGMA_FILE_KEY is optional (fallback if URL is unavailable)
-```
-
 ---
 
 ## Snapshot manifest (enterprise-style pinning)
@@ -81,6 +74,75 @@ yarn figma:mapping:validate -- figma-mapping.json
 ## AI prompt automation
 
 These commands assemble **fully pre-filled AI prompts** by reading your `.prompts/` files and injecting all project context (config, diff reports, behavior notes) automatically. Paste the output into any AI assistant and it can start working immediately — no manual clarifying-question cycle.
+
+### `yarn designer:brief` — let designers configure the project (no JSON required)
+
+```bash
+yarn designer:brief
+```
+
+Designers don't need to know JSON. They edit **one plain Markdown file**:
+
+```
+.prompts/designer-brief.md
+```
+
+and the script automatically updates all the config files.
+
+**What the designer fills in** (in `.prompts/designer-brief.md`):
+- Project name, framework, language, styling, UI library, font
+- Figma file URL and page names
+- Brand colors / design tokens
+- Per-frame info: Node ID, component name, file path, breakpoint, notes
+- Interaction behavior for any frame (trigger, states, animation, AI notes)
+
+**What the script updates automatically:**
+| Output | What changes |
+|--------|-------------|
+| `figma-mapping.json` | `project`, `figma`, `entries[]`, `tokens.colors` |
+| `.prompts/note_behavior/<node-id>.md` | Created (or updated with history preserved) per behavior section |
+| `.env` | `FIGMA_FILE_URL`, `FIGMA_NODE_IDS` (existing keys like `FIGMA_TOKEN` are preserved) |
+
+**Designer workflow:**
+
+```
+1. Designer opens  .prompts/designer-brief.md  and fills it in (plain Markdown)
+2. Developer runs: yarn designer:brief
+3. Developer runs: yarn ai:init
+4. Paste  figma/prompts/<date>-init-prompt.md  into your AI assistant → implement!
+```
+
+**Example `.prompts/designer-brief.md` snippet:**
+
+```markdown
+## Project
+- Name: Mercury Landing Page
+- Framework: Next.js
+- Language: TypeScript
+- Styling: Tailwind CSS
+- Font: Inter (body), Playfair Display (heading)
+
+## Figma
+- File URL: https://www.figma.com/design/ABC123/Mercury-Landing
+- Pages: Home Page
+
+## Pages
+
+### Home Page - Desktop
+- Node ID: 148:4463
+- Component: HomeDesktop
+- File: src/pages/home/HomeDesktop.tsx
+- Breakpoint: >= 1280px
+- Notes: Hero with hotspot markers.
+
+## Behavior: 148:4463
+
+### Trigger
+User clicks hotspot marker on hero image
+
+### Behavior
+Show tooltip. Only 1 open at a time.
+```
 
 ### `yarn ai:init` — init prompt (first-time setup)
 
