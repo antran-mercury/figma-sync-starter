@@ -135,22 +135,12 @@ and the script automatically updates all the config files.
 
 ## Pages
 
-### Home Page
-- Component: HomePage
-- File: src/pages/home/HomePage.tsx
-- Notes: Hero with hotspot markers. Mobile uses scrollable cards.
-
-#### Desktop
+### Home Page - Desktop
 - Node ID: 148:4463
+- Component: HomeDesktop
+- File: src/pages/home/HomeDesktop.tsx
 - Breakpoint: >= 1280px
-
-#### Tablet
-- Node ID: 200:5678
-- Breakpoint: 768px – 1279px
-
-#### Mobile
-- Node ID: 200:1234
-- Breakpoint: < 768px
+- Notes: Hero with hotspot markers.
 
 ## Behavior: 148:4463
 

@@ -1,27 +1,20 @@
 {
   "schemaVersion": "1.0.0",
   "project": {
-    "name": "My Project Name",
+    "name": "figma-sync-starter",
     "repository": "antran-mercury/figma-sync-starter",
     "stack": {
-      "framework": "Next.js",
-      "language": "TypeScript",
-      "styling": "Tailwind CSS",
-      "uiLibrary": "none"
+      "framework": "sync-only",
+      "language": "Node.js (ESM)",
+      "styling": "n/a",
+      "uiLibrary": "n/a"
     }
   },
   "figma": {
     "fileKey": "",
     "fileUrl": "",
-    "pagesInScope": [
-      "Home Page",
-      "About Page"
-    ],
-    "framesInScope": [
-      "148:4463",
-      "200:5678",
-      "200:1234"
-    ],
+    "pagesInScope": [],
+    "framesInScope": [],
     "latestSnapshot": {
       "date": "",
       "path": "",
@@ -38,50 +31,13 @@
     "fileNaming": "kebab-case",
     "pathAliases": {},
     "tokenStrategy": "n/a",
-    "defaultBranch": "master",
-    "font": "Inter (body), Playfair Display (heading)"
+    "defaultBranch": "master"
   },
   "tokens": {
     "source": "figma-variables|manual",
-    "files": [],
-    "colors": {
-      "primary": "#1A1A2E",
-      "accent": "#E94560",
-      "background": "#F5F5F5"
-    }
+    "files": []
   },
-  "entries": [
-    {
-      "nodeId": "148:4463",
-      "nodeName": "Home Page",
-      "nodeType": "FRAME",
-      "status": "active",
-      "code": {
-        "componentName": "HomePage",
-        "filePath": "src/pages/home/HomePage.tsx"
-      },
-      "designerNotes": {
-        "notes": "Hero section with interactive hotspot markers. Mobile uses scrollable cards."
-      },
-      "responsiveVariants": [
-        {
-          "nodeId": "148:4463",
-          "breakpoint": ">= 1280px",
-          "label": "Desktop"
-        },
-        {
-          "nodeId": "200:5678",
-          "breakpoint": "768px – 1279px",
-          "label": "Tablet"
-        },
-        {
-          "nodeId": "200:1234",
-          "breakpoint": "< 768px",
-          "label": "Mobile"
-        }
-      ]
-    }
-  ],
+  "entries": [],
   "deprecatedPolicy": {
     "neverDeleteEntries": true,
     "deprecateInsteadOfDelete": true
